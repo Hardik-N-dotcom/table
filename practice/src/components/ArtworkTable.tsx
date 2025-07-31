@@ -63,13 +63,20 @@ export default function ArtworkTable() {
         inscriptions: item.inscriptions,
         date_start: item.date_start,
         date_end: item.date_end,
-      }));
+      }
+    )
+  
+  );
 
       setArtworks(pageData);
       setTotalRecords(data.pagination.total);
-    } catch (err) {
+    } 
+    catch (err) {
+
       console.error("Fetch error:", err);
     } finally {
+
+
       setLoading(false);
     }
   };
@@ -160,9 +167,9 @@ export default function ArtworkTable() {
 
         {overlayVisible && (
           <div
-  ref={overlayRef}
-  className="absolute top-full right-0 mt-2 bg-white border border-gray-400 shadow-lg p-3 rounded-md w-44 z-20"
->
+      ref={overlayRef}
+      className="absolute top-full right-0 mt-2 bg-white border border-gray-400 shadow-lg p-3 rounded-md w-44 z-20">
+        
 
             <input
               type="number"
