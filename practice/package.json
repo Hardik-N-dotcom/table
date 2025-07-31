@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-     "build":"npm install --prefix practice && npm run build --prefix practice",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
