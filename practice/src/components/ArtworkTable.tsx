@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
@@ -15,6 +15,12 @@ interface Artwork {
   date_start: number;
   date_end: number;
 }
+
+type CustomPageEvent = {
+  page?: number;
+  first?: number;
+  rows?: number;
+};
 
 export default function ArtworkTable() {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -39,11 +45,13 @@ export default function ArtworkTable() {
         setOverlayVisible(false);
       }
     };
+
     if (overlayVisible) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -63,38 +71,31 @@ export default function ArtworkTable() {
         inscriptions: item.inscriptions,
         date_start: item.date_start,
         date_end: item.date_end,
-      }
-    )
-  
-  );
+      }));
 
       setArtworks(pageData);
       setTotalRecords(data.pagination.total);
-    } 
-    catch (err) {
-
+    } catch (err) {
       console.error("Fetch error:", err);
     } finally {
-
-
       setLoading(false);
     }
   };
 
-  const onPageChange = (event: { page: number }) => {
-    setPage(event.page);
+  const onPageChange = (event: CustomPageEvent) => {
+    if (typeof event.page === "number") {
+      setPage(event.page);
+    }
   };
 
   const onSelectionChange = (e: { value: Artwork[] }) => {
     const updatedMap = new Map(selectedArtworksMap);
     const currentPageIds = new Set(artworks.map((art) => art.id));
 
-    // Remove deselected rows from current page
     for (let id of currentPageIds) {
       updatedMap.delete(id);
     }
 
-    // Add newly selected rows from this page
     for (let art of e.value) {
       updatedMap.set(art.id, art);
     }
@@ -132,7 +133,6 @@ export default function ArtworkTable() {
         }));
 
         fetchedArtworks.push(...pageData);
-
         if (fetchedArtworks.length >= totalToSelect) break;
       }
 
@@ -154,40 +154,41 @@ export default function ArtworkTable() {
 
   return (
     <div className="p-4 relative">
-      <h2 className="text-2xl font-semibold mb-4">Artworks</h2>
-
-      <div className="mb-3 p-3 bg-blue-50 border border-blue-300 rounded-md flex justify-between items-center relative">
-        
-        <Button
-  label=""
-  icon="pi pi-angle-down"
-  className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-  onClick={() => setOverlayVisible((prev) => !prev)}
-/>
-
-        {overlayVisible && (
-          <div
-      ref={overlayRef}
-      className="absolute top-full right-0 mt-2 bg-white border border-gray-400 shadow-lg p-3 rounded-md w-44 z-20">
-        
-
-            <input
-              type="number"
-              min={1}
-              max={totalRecords}
-              value={bulkSelectCount ?? ''}
-              onChange={(e) => setBulkSelectCount(parseInt(e.target.value))}
-              placeholder="Select rows..."
-              className="border px-2 py-1 text-sm rounded w-full mb-2"
-            />
-            <button
-              onClick={handleBulkSelectSubmit}
-              className="bg-gray-100 border text-sm px-3 py-1 rounded hover:bg-gray-200 w-full"
+      <div className="mb-4 flex items-center gap-3">
+        {/* Overlay Button on Left */}
+        <div className="relative">
+          <Button
+            label=""
+            icon="pi pi-angle-down"
+            className="p-button-sm bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+            onClick={() => setOverlayVisible((prev) => !prev)}
+          />
+          {overlayVisible && (
+            <div
+              ref={overlayRef}
+              className="absolute top-full left-0 mt-2 bg-white border border-gray-400 shadow-lg p-3 rounded-md w-44 z-20"
             >
-              submit
-            </button>
-          </div>
-        )}
+              <input
+                type="number"
+                min={1}
+                max={totalRecords}
+                value={bulkSelectCount ?? ""}
+                onChange={(e) => setBulkSelectCount(parseInt(e.target.value))}
+                placeholder="Select rows..."
+                className="border px-2 py-1 text-sm rounded w-full mb-2"
+              />
+              <button
+                onClick={handleBulkSelectSubmit}
+                className="bg-gray-100 border text-sm px-3 py-1 rounded hover:bg-gray-200 w-full"
+              >
+                submit
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Title */}
+        <h2 className="text-2xl font-semibold">Artworks</h2>
       </div>
 
       <DataTable
@@ -202,6 +203,7 @@ export default function ArtworkTable() {
         dataKey="id"
         selection={currentPageSelection}
         onSelectionChange={onSelectionChange}
+        selectionMode="multiple"
       >
         <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
         <Column field="title" header="Title" />
